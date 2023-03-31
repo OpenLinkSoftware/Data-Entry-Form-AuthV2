@@ -92,7 +92,7 @@ class AppState {
       if (this.lastState.endpoint)
         DOC.iSel("sparql_endpoint").value = this.lastState.endpoint;
 
-    } catch (e) { 
+    } catch (e) {
       console.log('Error restoring last state from session storage');
     }
 
@@ -118,16 +118,16 @@ class AppState {
     }
     else {
       var documentName;
-      DOC.iSel('apObjectID').innerHTML = 
+      DOC.iSel('apObjectID').innerHTML =
             '{\n' +
             '  "@context": "https://www.w3.org/ns/activitystreams",\n' +
             '  "type": "Note",\n' +
             '  "summary":null,\n' +
             '  "content": ""\n' +
             '}';
-      document.getElementById('login_custom_idp').value = globals.host;  
-      document.getElementById('docNameID2').value = globals.dav_link;  
-      document.getElementById('sparql_endpoint').value = globals.sparql_endpoint;  
+      document.getElementById('login_custom_idp').value = globals.host;
+      document.getElementById('docNameID2').value = globals.dav_link;
+      document.getElementById('sparql_endpoint').value = globals.sparql_endpoint;
       if (this.getCurTab() === "fs") {
         $('a[href="#fsID"]').tab('show');
       if (this.lastState.documentName)
@@ -310,7 +310,7 @@ class DOC {
 // class DOC: End
 // --------------------------------------------------------------------------
 
-// 
+//
 // These Functions are Used to Display Validation Errors
 //
 
@@ -329,7 +329,7 @@ function errorMessage(id, error) {
   DOC.iSel(id).innerHTML = error;
 }
 
-// 
+//
 // These Functions Handle the Form Validation
 //
 
@@ -605,7 +605,7 @@ function nonvalidatedObject() {
   }
 }
 
-// 
+//
 // These functions handle the data table
 //
 
@@ -613,7 +613,7 @@ function makeLink(link) {
   var href = link;
   if (DOC.iSel("fctID").checked == true) { //if fct checkbox is checked
       href = globals.describe + link;
-  }    
+  }
   link = '<a target="_blank" href="' + href + '">' + link + '</a>';
   return link;
 }
@@ -921,7 +921,7 @@ async function resolveOutBox() {
     {
       showSnackbar('Not logged-in');
       errorMessage("outboxErrorID", "Not logged-in");
-      return;  
+      return;
     }
   const options = {
     method: 'GET',
@@ -958,23 +958,23 @@ async function sendActivity() {
   showSpinner();
   var activity = DOC.iSel("apObjectID").value;
 
-  console.log (gAppState.webid);  
+  console.log (gAppState.webid);
   if (!gAppState.webid) {
       showSnackbar('Not logged-in');
       errorMessage("outboxErrorID", "Not logged-in");
       hideSpinner();
-      return;  
+      return;
     }
   var endpoint = DOC.iSel("outboxID").value;
   let url = endpoint;
   if (url.length < 1 || (!url.startsWith('https://') && !url.startsWith('http://'))) {
       showSnackbar('OutBox URI not fetched or invalid');
       hideSpinner();
-      return;  
+      return;
     }
   errorMessage("outboxErrorID", "");
 
-  try {  
+  try {
      var ap = JSON.parse(activity);
      if (ap['@context'] != 'https://www.w3.org/ns/activitystreams')
        {
@@ -982,7 +982,7 @@ async function sendActivity() {
            hideSpinner();
            return;
        }
-     if ((!ap.content && !ap.object)  || (ap.content && ap.content.length < 1)) 
+     if ((!ap.content && !ap.object)  || (ap.content && ap.content.length < 1))
        {
            errorMessage("apObjectErrorID", "Activity Object must have `content` or `object`");
            hideSpinner();
@@ -1023,7 +1023,7 @@ async function sendActivity() {
       activity_url = resp.headers.get('location');
       DOC.iSel("sendResultID").innerHTML = makeLink(activity_url);
       hideSpinner();
-      DOC.iSel("apObjectID").innerHTML = 
+      DOC.iSel("apObjectID").value =
             '{\n' +
             '  "@context": "https://www.w3.org/ns/activitystreams",\n' +
             '  "type": "Note",\n' +
@@ -1031,7 +1031,7 @@ async function sendActivity() {
             '  "content": ""\n' +
             '}';
       showSnackbar('Posted');
-      showActivtyDetails (activity_url);  
+      showActivtyDetails (activity_url);
     } else {
       throw new Error(`Error ${resp.status} - ${resp.statusText}`);
       console.error('Send Failed', e);
@@ -1865,7 +1865,7 @@ async function fetchProfile(url) {
     if (resp.ok) {
       var body = await resp.text();
       var contentType = resp.headers.get('content-type');
-      console.log (contentType);  
+      console.log (contentType);
       return { profile: body, contentType };
     }
     else {
@@ -1923,7 +1923,7 @@ function pickActivity(id) {
 
     DOC.iSel('apObjType').innerHTML = 'Activity Object Type ('+id+')&nbsp;<span class="caret">';
     if (item == 'note') {
-      DOC.iSel('apObjectID').innerHTML = 
+      DOC.iSel('apObjectID').value =
             '{\n' +
             '  "@context": "https://www.w3.org/ns/activitystreams",\n' +
             '  "type": "Note",\n' +
@@ -1932,7 +1932,7 @@ function pickActivity(id) {
             '}';
     }
     else if (item == 'delete' || item == 'like' || item == 'announce' || item == 'follow') {
-      DOC.iSel('apObjectID').innerHTML = 
+      DOC.iSel('apObjectID').value =
             '{\n' +
             '  "@context": "https://www.w3.org/ns/activitystreams",\n' +
             '  "type": "'+ id +'",\n' +
@@ -1940,22 +1940,22 @@ function pickActivity(id) {
             '}';
     }
     else if (item == 'unfollow') {
-      DOC.iSel('apObjectID').innerHTML = 
+      DOC.iSel('apObjectID').value =
             '{\n' +
             '  "@context": "https://www.w3.org/ns/activitystreams",\n' +
             '  "type": "Undo",\n' +
-            '  "object": {\n' + 
+            '  "object": {\n' +
             '     "type": "Follow",\n' +
             '     "object": ""\n' +
             '  }\n' +
             '}';
     }
     else if (item == 'unlike') {
-      DOC.iSel('apObjectID').innerHTML = 
+      DOC.iSel('apObjectID').value =
             '{\n' +
             '  "@context": "https://www.w3.org/ns/activitystreams",\n' +
             '  "type": "Undo",\n' +
-            '  "object": {\n' + 
+            '  "object": {\n' +
             '     "type": "Like",\n' +
             '     "object": ""\n' +
             '  }\n' +
