@@ -1023,8 +1023,18 @@ async function sendActivity() {
       activity_url = resp.headers.get('location');
       DOC.iSel("sendResultID").innerHTML = makeLink(activity_url);
       hideSpinner();
+      DOC.iSel("apObjectID").innerHTML = 
+            '{\n' +
+            '  "@context": "https://www.w3.org/ns/activitystreams",\n' +
+            '  "type": "Note",\n' +
+            '  "summary":null,\n' +
+            '  "content": ""\n' +
+            '}';
+      showSnackbar('Posted');
+      showActivtyDetails (activity_url);  
     } else {
       throw new Error(`Error ${resp.status} - ${resp.statusText}`);
+      console.error('Send Failed', e);
       hideSpinner();
     }
   } catch (e) {
@@ -1032,15 +1042,6 @@ async function sendActivity() {
     console.error('Send Failed', e);
     showSnackbar('Send Failed', '' + e);
   }
-  DOC.iSel("apObjectID").value = 
-        '{\n' +
-        '  "@context": "https://www.w3.org/ns/activitystreams",\n' +
-        '  "type": "Note",\n' +
-        '  "summary":null,\n' +
-        '  "content": ""\n' +
-        '}';
-  showSnackbar('Posted');
-  showActivtyDetails (activity_url);  
 }
 
 async function showActivtyDetails (activity_url) {
@@ -1917,6 +1918,51 @@ async function showSnackbar(text1, text2) {
   await delay(tm);
 }
 
+function pickActivity(id) {
+    var item = id.toLowerCase();
+
+    DOC.iSel('apObjType').innerHTML = 'Activity Object Type ('+id+')&nbsp;<span class="caret">';
+    if (item == 'note') {
+      DOC.iSel('apObjectID').innerHTML = 
+            '{\n' +
+            '  "@context": "https://www.w3.org/ns/activitystreams",\n' +
+            '  "type": "Note",\n' +
+            '  "summary":null,\n' +
+            '  "content": ""\n' +
+            '}';
+    }
+    else if (item == 'delete' || item == 'like' || item == 'announce' || item == 'follow') {
+      DOC.iSel('apObjectID').innerHTML = 
+            '{\n' +
+            '  "@context": "https://www.w3.org/ns/activitystreams",\n' +
+            '  "type": "'+ id +'",\n' +
+            '  "object": ""\n' +
+            '}';
+    }
+    else if (item == 'unfollow') {
+      DOC.iSel('apObjectID').innerHTML = 
+            '{\n' +
+            '  "@context": "https://www.w3.org/ns/activitystreams",\n' +
+            '  "type": "Undo",\n' +
+            '  "object": {\n' + 
+            '     "type": "Follow",\n' +
+            '     "object": ""\n' +
+            '  }\n' +
+            '}';
+    }
+    else if (item == 'unlike') {
+      DOC.iSel('apObjectID').innerHTML = 
+            '{\n' +
+            '  "@context": "https://www.w3.org/ns/activitystreams",\n' +
+            '  "type": "Undo",\n' +
+            '  "object": {\n' + 
+            '     "type": "Like",\n' +
+            '     "object": ""\n' +
+            '  }\n' +
+            '}';
+    }
+}
+
 // ==========================================================================
 // Declarations done, now execute ...
 
@@ -2005,6 +2051,11 @@ $(document).ready(function () {
     $('#configError').modal('show');
   // check for permalink
   gAppState.loadPermalink();
+
+  $('.dropdown-menu a[href="#ap"]').click(function(){
+    pickActivity(this.text);
+    e.preventDefault();
+  });
 
   //docNameValue() ; // Checks/updates document name when page is loaded
 
