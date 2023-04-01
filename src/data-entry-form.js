@@ -935,6 +935,7 @@ async function resolveOutBox() {
 
   var url = gAppState.webid;
   var resp;
+  showSpinner();
   try {
     resp = await solidClient.fetch(url, options);
     if (resp.ok) {
@@ -984,13 +985,13 @@ async function sendActivity() {
        }
      if ((!ap.content && !ap.object)  || (ap.content && ap.content.length < 1))
        {
-           errorMessage("apObjectErrorID", "Activity Object must have `content` or `object`");
+           errorMessage("apObjectErrorID", "ActivityStreams Object must have `content` or `object`");
            hideSpinner();
            return;
        }
      if (!ap.type)
        {
-           errorMessage("apObjectErrorID", "Activity Object must have a `type`");
+           errorMessage("apObjectErrorID", "ActivityStreams Object must have a `type`");
            hideSpinner();
            return;
        }
@@ -1804,6 +1805,7 @@ async function turtleDel() {
 //
 
 async function loadProfile(webId) {
+  showSpinner();
   try {
     var rc = await fetchProfile(webId);
     if (!rc)
@@ -1834,6 +1836,7 @@ async function loadProfile(webId) {
     var s_pubIndex = kb.any(s_webId, SOLID('publicTypeIndex'));
 
     var is_solid_id = (s_issuer || s_account || s_pubIndex) ? true : false;
+    hideSpinner();
 
     if (inbox)
       return { store: inbox.value, is_solid_id };
@@ -1841,6 +1844,7 @@ async function loadProfile(webId) {
       return { store: store.value, is_solid_id };
 
   } catch (e) {
+    hideSpinner();
     console.error('Error', e)
     alert('Error ', e)
     return null;
@@ -1885,8 +1889,8 @@ async function authLogin() {
 
 async function authLogout() {
   console.log('authLogout(): Calling solidClientAuthentication.logout()');
-  await solidClientAuthentication.logout()
-  location.reload()
+  await solidClientAuthentication.logout();
+  location.reload();
 }
 
 // --------------------------------------------------------------------------
@@ -1921,7 +1925,7 @@ async function showSnackbar(text1, text2) {
 function pickActivity(id) {
     var item = id.toLowerCase();
 
-    DOC.iSel('apObjType').innerHTML = 'Activity Object Type ('+id+')&nbsp;<span class="caret">';
+    DOC.iSel('apObjType').innerHTML = 'ActivityStreams Object Type ('+id+')&nbsp;<span class="caret">';
     if (item == 'note') {
       DOC.iSel('apObjectID').value =
             '{\n' +
@@ -2054,7 +2058,6 @@ $(document).ready(function () {
 
   $('.dropdown-menu a[href="#ap"]').click(function(){
     pickActivity(this.text);
-    e.preventDefault();
   });
 
   //docNameValue() ; // Checks/updates document name when page is loaded
