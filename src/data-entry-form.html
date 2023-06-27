@@ -61,12 +61,12 @@
           </div>
           <!-- Inference Rule Name -->
           <div class="checkbox">
-            <label><input id="ruleNameID" type="checkbox" value="">Inference Rule</label> 
+            <label><input id="ruleNameID" type="checkbox" value="">Inference Rule</label>
             <input type="text" style="max-width: 250px" value="urn:ifp:inference:rule" id="infRuleNameID">
           </div>
 
           <div >
-            <label style="font-weight: normal" >SPARQL Endpoint</label> 
+            <label style="font-weight: normal" >SPARQL Endpoint</label>
             <!-- CMSB: TO DO: Default sparql endpoint. Move to a const in data-entry-form.js -->
             <input type="text" style="width: 20em" value="https://localhost:8443/sparql" id="sparql_endpoint">
           </div>
@@ -130,7 +130,26 @@
                   </span-->
                 </div>
                 <div class="form-group">
-                  <label for="apObjectID">Activity Object</label>
+                    <label for="apObjType">ActivityStreams Object Document Template</label>
+                    <span class="glyphicon glyphicon-question-sign" data-toggle="tooltip"
+                                                                    data-original-title="ActivityStreams Object JSON-LD Document Template"></span>
+                  <div class="dropdown">
+                      <button type="button" class="btn btn-default dropdown-toggle" id="apObjType"
+                          data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">ActivityStreams Object Type&nbsp;<span class="caret"></span>
+                      </button>
+                      <ul class="dropdown-menu" id="apObj">
+                          <li><a href="#ap">Note</a></li>
+                          <li><a href="#ap">Delete</a></li>
+                          <li><a href="#ap">Like</a></li>
+                          <li><a href="#ap">UnLike</a></li>
+                          <li><a href="#ap">Announce</a></li>
+                          <li><a href="#ap">Follow</a></li>
+                          <li><a href="#ap">UnFollow</a></li>
+                      </ul>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="apObjectID">ActivityStreams Object</label>
                   <span class="glyphicon glyphicon-question-sign" data-toggle="tooltip"
                     data-original-title="JSON-LD document representing ActivityPub object"></span>
                   <textarea class="form-control" placeholder="JSON-LD" rows="10"
@@ -388,7 +407,7 @@
   <span>or enter your WebID or the URL of your identity provider:</span><br/>
   <form>
     <fieldset>
-      <input type="text" id="login_custom_idp" value="https://localhost:8443" placeholder="https://my-identity.provider" 
+      <input type="text" id="login_custom_idp" value="https://localhost:8443" placeholder="https://my-identity.provider"
        class="text ui-widget-content ui-corner-all">
     </fieldset>
   </form>
