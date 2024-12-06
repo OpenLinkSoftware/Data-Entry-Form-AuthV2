@@ -20,3 +20,6 @@ This SPA variant also does away with the login popup window used by [OpenLinkSof
 ## ActivityPub (AP) Usage
 
 The “Activity Pub” tab provides an interface for posting JSON-LD payloads related to various AP operations. To utilize this functionality, you MUST log in successfully with a user identity linked to an AP-compliant profile document. Failure to do so will result in an HTTP 406 error.
+
+
+[![AP SPA Demo](https://www.openlinksw.com/data/screenshots/spa-activitypub-usage-demo-1.png)](https://www.openlinksw.com/data/screenshots/spa-activitypub-usage-demo-1.png)
