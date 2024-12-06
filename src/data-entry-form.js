@@ -22,7 +22,7 @@ class AppState {
     this.initialObject = "";
     this.initialDocumentName = "";
     this.initialEndpoint = "";
-    this.lastState = { tab: "dbms", documentName: "" };
+    this.lastState = { tab: "ap", documentName: "" };
   }
 
   async updateLoginState() {
@@ -60,7 +60,8 @@ class AppState {
           this.is_solid_id = false;
         }
         sessionStorage.setItem('solid_storage', this.solid_storage);
-        this.docNameValue()
+        this.docNameValue();
+        resolveOutBox();
       }
     } else {
       this.webid = null;
@@ -85,13 +86,13 @@ class AppState {
       if (lastState)
         this.lastState = lastState;
 
-      if (!this.lastState.tab && (this.lastState.tab !== "dbms" || this.lastState.tab !== "fs"))
-        this.lastState.tab = "dbms";
+      if (!this.lastState.tab && (this.lastState.tab !== "dbms" || this.lastState.tab !== "fs" || this.lastState.tab !== "ap"))
+        this.lastState.tab = "ap";
 
       if (this.lastState.endpoint)
         DOC.iSel("sparql_endpoint").value = this.lastState.endpoint;
 
-    } catch (e) { 
+    } catch (e) {
       console.log('Error restoring last state from session storage');
     }
 
@@ -108,21 +109,35 @@ class AppState {
       this.initialEndpoint = decodeURIComponent(params.get("endpoint"));
       this.handlePermalink();
 
-      if (this.initialTab === "dbms")
+      if (this.initialTab === "ap")
+        $('a[href="#apID"]').tab('show');
+      else if (this.initialTab === "dbms")
         $('a[href="#dbmsID"]').tab('show');
       else if (this.initialTab === "fs")
         $('a[href="#fsID"]').tab('show');
     }
     else {
       var documentName;
+      DOC.iSel('apObjectID').innerHTML =
+            '{\n' +
+            '  "@context": "https://www.w3.org/ns/activitystreams",\n' +
+            '  "type": "Note",\n' +
+            '  "summary":null,\n' +
+            '  "content": ""\n' +
+            '}';
+      document.getElementById('login_custom_idp').value = globals.host;
+      document.getElementById('docNameID2').value = globals.dav_link;
+      document.getElementById('sparql_endpoint').value = globals.sparql_endpoint;
       if (this.getCurTab() === "fs") {
         $('a[href="#fsID"]').tab('show');
-        if (this.lastState.documentName)
+      if (this.lastState.documentName)
           document.getElementById('docNameID2').value = this.lastState.documentName;
-      } else {
+      } else if (this.getCurTab() === "dbms") {
         $('a[href="#dbmsID"]').tab('show');
         if (this.lastState.documentName)
           document.getElementById('docNameID').value = this.lastState.documentName;
+      } else {
+        $('a[href="#apID"]').tab('show');
       }
     }
 
@@ -139,6 +154,8 @@ class AppState {
       this.lastState.tab = tab = "dbms";
     } else if (DOC.iSel('fsTabID').getAttribute('class') === "active") {
       this.lastState.tab = tab = "fs";
+    } else if (DOC.iSel('apTabID').getAttribute('class') === "active") {
+      this.lastState.tab = tab = "ap";
     }
 
     var permalink = DOC.iSel("permalinkID");
@@ -221,7 +238,7 @@ class AppState {
       DOC.iSel("docNameID2").value = solid_storage_value;
     } else {
       DOC.iSel("docNameID").value = "urn:records:test";
-      DOC.iSel("docNameID2").value = "https://kingsley.idehen.net/public_home/jordan/Public/record-test.ttl";
+      DOC.iSel("docNameID2").value = globals.dav_link;
     }
 
     // value from permalink
@@ -293,7 +310,7 @@ class DOC {
 // class DOC: End
 // --------------------------------------------------------------------------
 
-// 
+//
 // These Functions are Used to Display Validation Errors
 //
 
@@ -312,7 +329,7 @@ function errorMessage(id, error) {
   DOC.iSel(id).innerHTML = error;
 }
 
-// 
+//
 // These Functions Handle the Form Validation
 //
 
@@ -588,9 +605,18 @@ function nonvalidatedObject() {
   }
 }
 
-// 
+//
 // These functions handle the data table
 //
+
+function makeLink(link) {
+  var href = link;
+  if (DOC.iSel("fctID").checked == true) { //if fct checkbox is checked
+      href = globals.describe + link;
+  }
+  link = '<a target="_blank" href="' + href + '">' + link + '</a>';
+  return link;
+}
 
 // This function allows hyperlinks to be used in the table
 function tableFormat(str) {
@@ -599,8 +625,8 @@ function tableFormat(str) {
   var graph = gAppState.checkValue("docNameID", "docNameID2");
   var strLabel = str; // variable for what is show on screen in the href
 
-  if (str.includes("https://linkeddata.uriburner.com/describe/?url=")) {// of str is in fct format
-    strLabel = strLabel.replace("https://linkeddata.uriburner.com/describe/?url=", "");
+  if (str.includes(globals.describe)) {// of str is in fct format
+    strLabel = strLabel.replace(globals.describe, "");
     strLabel = strLabel.replace("%23", "#");
   }
 
@@ -822,7 +848,8 @@ function last() {
 // This sets the size of the current table
 async function setTableSize() {
   var graph = gAppState.checkValue("docNameID", "docNameID2");
-
+  if (gAppState.getCurTab() === "ap")
+    return;
   if (gAppState.getCurTab() === "dbms") {
     var query =
       "SELECT DISTINCT COUNT(*) AS ?count FROM <" + graph + "> WHERE {?subject ?predicate ?object}"
@@ -874,7 +901,7 @@ async function setTableSize() {
     } else {
       var msg = await resp.text();
       hideSpinner();
-      console.error("Error: " + msg)
+      console.error("Error: " + resp.status)
       await showSnackbar('Table Size Failed', `SPARQL endpoint Error: ${resp.status} ${resp.statusText}`);
     }
 
@@ -888,6 +915,167 @@ async function setTableSize() {
 //
 // These Functions Handle the Functionality of the Page
 //
+
+async function resolveOutBox() {
+  if (!gAppState.webid)
+    {
+      showSnackbar('Not logged-in');
+      errorMessage("outboxErrorID", "Not logged-in");
+      return;
+    }
+  const options = {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
+    },
+    credentials: 'include',
+    mode: 'cors',
+    crossDomain: true,
+  };
+
+  var url = gAppState.webid;
+  var resp;
+  showSpinner();
+  try {
+    resp = await solidClient.fetch(url, options);
+    if (resp.ok) {
+      var body = await resp.text();
+      var profile = JSON.parse (body);
+      DOC.iSel("outboxID").value = profile.outbox;
+      console.log(resp.status + " - " + resp.statusText);
+      hideSpinner();
+    } else {
+      throw new Error(`Error ${resp.status} - ${resp.statusText}`);
+      hideSpinner();
+    }
+  } catch (e) {
+    hideSpinner();
+    console.error('Fetch Failed', e);
+    showSnackbar('Outbox Fetch Failed', '' + e);
+  }
+}
+
+async function sendActivity() {
+  showSpinner();
+  var activity = DOC.iSel("apObjectID").value;
+
+  console.log (gAppState.webid);
+  if (!gAppState.webid) {
+      showSnackbar('Not logged-in');
+      errorMessage("outboxErrorID", "Not logged-in");
+      hideSpinner();
+      return;
+    }
+  var endpoint = DOC.iSel("outboxID").value;
+  let url = endpoint;
+  if (url.length < 1 || (!url.startsWith('https://') && !url.startsWith('http://'))) {
+      showSnackbar('OutBox URI not fetched or invalid');
+      hideSpinner();
+      return;
+    }
+  errorMessage("outboxErrorID", "");
+
+  try {
+     var ap = JSON.parse(activity);
+     if (ap['@context'] != 'https://www.w3.org/ns/activitystreams')
+       {
+           errorMessage("apObjectErrorID", "Not an ActivityStreams Object, check @context value");
+           hideSpinner();
+           return;
+       }
+     if ((!ap.content && !ap.object)  || (ap.content && ap.content.length < 1))
+       {
+           errorMessage("apObjectErrorID", "ActivityStreams Object must have `content` or `object`");
+           hideSpinner();
+           return;
+       }
+     if (!ap.type)
+       {
+           errorMessage("apObjectErrorID", "ActivityStreams Object must have a `type`");
+           hideSpinner();
+           return;
+       }
+  }
+  catch (e) {
+    showSnackbar('Invalid JSON', '' + e);
+    hideSpinner();
+    return;
+  }
+
+  errorMessage("apObjectErrorID","");
+
+  const options = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/activity+json',
+    },
+    credentials: 'include',
+    mode: 'cors',
+    crossDomain: true,
+    body: activity,
+  };
+
+  var resp;
+  var activity_url = null;
+  try {
+    resp = await solidClient.fetch(url, options);
+    if (resp.ok) {
+      console.log(resp.status + " - " + resp.statusText);
+      activity_url = resp.headers.get('location');
+      DOC.iSel("sendResultID").innerHTML = makeLink(activity_url);
+      hideSpinner();
+      DOC.iSel("apObjectID").value =
+            '{\n' +
+            '  "@context": "https://www.w3.org/ns/activitystreams",\n' +
+            '  "type": "Note",\n' +
+            '  "summary":null,\n' +
+            '  "content": ""\n' +
+            '}';
+      showSnackbar('Posted');
+      showActivtyDetails (activity_url);
+    } else {
+      throw new Error(`Error ${resp.status} - ${resp.statusText}`);
+      console.error('Send Failed', e);
+      hideSpinner();
+    }
+  } catch (e) {
+    hideSpinner();
+    console.error('Send Failed', e);
+    showSnackbar('Send Failed', '' + e);
+  }
+}
+
+async function showActivtyDetails (activity_url) {
+  let url = activity_url;
+  console.log (url);
+  if (!activity_url)
+    return;
+  const options = {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
+    },
+    credentials: 'include',
+    mode: 'cors',
+    crossDomain: true,
+  };
+  try {
+    resp = await solidClient.fetch(url, options);
+    if (resp.ok) {
+      var body = await resp.text();
+      var activity = JSON.parse (body);
+      if (activity.object)
+        DOC.iSel("apPostID").innerHTML = makeLink(activity.object.id);
+      else
+        DOC.iSel("apPostID").innerHTML = 'N/A';
+    } else {
+      throw new Error(`Error ${resp.status} - ${resp.statusText}`);
+    }
+  } catch (e) {
+    console.error('Fetch Failed', e);
+    showSnackbar('Fetch Failed', '' + e);
+  }
+}
 
 //updateTable(); //Table is always shown when page is loaded
 
@@ -1253,17 +1441,17 @@ async function queryGen() {
           var object = data.results.bindings[i].object.value;
           if (DOC.iSel("fctID").checked == true) { //if fct checkbox is checked
             if (subject.includes(graph) || regexp.test(subject)) { //if subject is not a literal value
-              subject = "https://linkeddata.uriburner.com/describe/?url=" + data.results.bindings[i].subject.value;
+              subject = globals.describe + data.results.bindings[i].subject.value;
               subject = subject.replace("#", "%23"); // replaces # with %23 for fct results
             }
 
             if (predicate.includes(graph) || regexp.test(predicate)) { //if subject is not a literal value
-              predicate = "https://linkeddata.uriburner.com/describe/?url=" + data.results.bindings[i].predicate.value;
+              predicate = globals.describe + data.results.bindings[i].predicate.value;
               predicate = predicate.replace("#", "%23");
             }
 
             if (object.includes(graph) || regexp.test(object)) {
-              object = "https://linkeddata.uriburner.com/describe/?url=" + data.results.bindings[i].object.value;
+              object = globals.describe + data.results.bindings[i].object.value;
               object = object.replace("#", "%23");
             } else { //if object is literal value
               object = data.results.bindings[i].object.value;
@@ -1318,6 +1506,8 @@ function click_updateTable() {
 
 async function updateTable() {
   resultMode = "all";
+  if (gAppState.getCurTab() === "ap")
+    return;
   var graph = gAppState.checkValue("docNameID", "docNameID2");
   if (!graph) {
     console.log("DocumentName is Empty");
@@ -1365,7 +1555,7 @@ async function updateTable() {
   const options = {
     method: 'GET',
     headers: {
-      'Content-type': 'application/sparql-results+json; charset=UTF-8',
+      'Accept': 'application/sparql-results+json; charset=UTF-8',
     },
     credentials: 'include',
     mode: 'cors',
@@ -1390,17 +1580,17 @@ async function updateTable() {
           var object = data.results.bindings[i].object.value;
           if (DOC.iSel("fctID").checked == true) { //if fct checkbox is checked
             if (subject.includes(graph) || regexp.test(subject)) { //if subject is not a literal value
-              subject = "https://linkeddata.uriburner.com/describe/?url=" + data.results.bindings[i].subject.value;
+              subject = globals.describe + data.results.bindings[i].subject.value;
               subject = subject.replace("#", "%23"); // replaces # with %23 for fct results
             }
 
             if (predicate.includes(graph) || regexp.test(predicate)) { //if subject is not a literal value
-              predicate = "https://linkeddata.uriburner.com/describe/?url=" + data.results.bindings[i].predicate.value;
+              predicate = globals.describe + data.results.bindings[i].predicate.value;
               predicate = predicate.replace("#", "%23");
             }
 
             if (object.includes(graph) || regexp.test(object)) {
-              object = "https://linkeddata.uriburner.com/describe/?url=" + data.results.bindings[i].object.value;
+              object = globals.describe + data.results.bindings[i].object.value;
               object = object.replace("#", "%23");
             } else { //if object is literal value
               object = data.results.bindings[i].object.value;
@@ -1624,6 +1814,7 @@ async function turtleDel() {
 //
 
 async function loadProfile(webId) {
+  showSpinner();
   try {
     var rc = await fetchProfile(webId);
     if (!rc)
@@ -1654,6 +1845,7 @@ async function loadProfile(webId) {
     var s_pubIndex = kb.any(s_webId, SOLID('publicTypeIndex'));
 
     var is_solid_id = (s_issuer || s_account || s_pubIndex) ? true : false;
+    hideSpinner();
 
     if (inbox)
       return { store: inbox.value, is_solid_id };
@@ -1661,6 +1853,7 @@ async function loadProfile(webId) {
       return { store: store.value, is_solid_id };
 
   } catch (e) {
+    hideSpinner();
     console.error('Error', e)
     alert('Error ', e)
     return null;
@@ -1668,12 +1861,12 @@ async function loadProfile(webId) {
 }
 
 async function fetchProfile(url) {
-  if (!url.startsWith('https://'))
+  if (!url.startsWith('https://') && !url.startsWith('http://'))
     return null;
 
   const options = {
     method: 'GET',
-    headers: { 'Accept': 'text/turtle, application/ld+json' },
+    headers: { 'Accept': 'text/turtle,application/ld+json;q=0.9' }, // rdflib do not parse AS profile by a reason
     credentials: 'include',
     mode: 'cors',
     crossDomain: true,
@@ -1685,6 +1878,7 @@ async function fetchProfile(url) {
     if (resp.ok) {
       var body = await resp.text();
       var contentType = resp.headers.get('content-type');
+      console.log (contentType);
       return { profile: body, contentType };
     }
     else {
@@ -1704,8 +1898,8 @@ async function authLogin() {
 
 async function authLogout() {
   console.log('authLogout(): Calling solidClientAuthentication.logout()');
-  await solidClientAuthentication.logout()
-  location.reload()
+  await solidClientAuthentication.logout();
+  location.reload();
 }
 
 // --------------------------------------------------------------------------
@@ -1735,6 +1929,51 @@ async function showSnackbar(text1, text2) {
   x.className = "show";
   setTimeout(function () { x.className = x.className.replace("show", ""); }, tm);
   await delay(tm);
+}
+
+function pickActivity(id) {
+    var item = id.toLowerCase();
+
+    DOC.iSel('apObjType').innerHTML = 'ActivityStreams Object Type ('+id+')&nbsp;<span class="caret">';
+    if (item == 'note') {
+      DOC.iSel('apObjectID').value =
+            '{\n' +
+            '  "@context": "https://www.w3.org/ns/activitystreams",\n' +
+            '  "type": "Note",\n' +
+            '  "summary":null,\n' +
+            '  "content": ""\n' +
+            '}';
+    }
+    else if (item == 'delete' || item == 'like' || item == 'announce' || item == 'follow') {
+      DOC.iSel('apObjectID').value =
+            '{\n' +
+            '  "@context": "https://www.w3.org/ns/activitystreams",\n' +
+            '  "type": "'+ id +'",\n' +
+            '  "object": ""\n' +
+            '}';
+    }
+    else if (item == 'unfollow') {
+      DOC.iSel('apObjectID').value =
+            '{\n' +
+            '  "@context": "https://www.w3.org/ns/activitystreams",\n' +
+            '  "type": "Undo",\n' +
+            '  "object": {\n' +
+            '     "type": "Follow",\n' +
+            '     "object": ""\n' +
+            '  }\n' +
+            '}';
+    }
+    else if (item == 'unlike') {
+      DOC.iSel('apObjectID').value =
+            '{\n' +
+            '  "@context": "https://www.w3.org/ns/activitystreams",\n' +
+            '  "type": "Undo",\n' +
+            '  "object": {\n' +
+            '     "type": "Like",\n' +
+            '     "object": ""\n' +
+            '  }\n' +
+            '}';
+    }
 }
 
 // ==========================================================================
@@ -1769,6 +2008,9 @@ $(document).ready(function () {
   DOC.iSel('predicateID').onchange = () => { gAppState.updatePermalink() }
   DOC.iSel('objectID').onchange = () => { gAppState.updatePermalink() }
   DOC.iSel('docNameID').onchange = () => { gAppState.updatePermalink() }
+
+  //DOC.iSel('resolveBtnID').onclick = () => { resolveOutBox() }
+  DOC.iSel('sendBtnID').onclick = () => { sendActivity() }
 
   DOC.iSel('clearBtnID').onclick = () => { gAppState.clearInput() }
   DOC.iSel('insertBtnID').onclick = () => { recordGen() }
@@ -1818,8 +2060,14 @@ $(document).ready(function () {
     }
   });
 
+  if (typeof (globals) == 'undefined')
+    $('#configError').modal('show');
   // check for permalink
   gAppState.loadPermalink();
+
+  $('.dropdown-menu a[href="#ap"]').click(function(){
+    pickActivity(this.text);
+  });
 
   //docNameValue() ; // Checks/updates document name when page is loaded
 

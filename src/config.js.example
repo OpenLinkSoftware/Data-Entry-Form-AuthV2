@@ -1,0 +1,6 @@
+var globals = { 
+        dav_link: "https://id.myopenlink.net/public_home/KingsleyUyiIdehen/RWW-QA/test1.ttl",
+        describe: "https://linkeddata.uriburner.com/describe/?url=",
+        sparql_endpoint: "https://linkeddata.uriburner.com/sparql",
+        host: "https://linkeddata.uriburner.com"
+};

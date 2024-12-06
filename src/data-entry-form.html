@@ -19,6 +19,7 @@
   <script src="./solid-client-authn.bundle.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/rdflib@0.20.1/dist/rdflib.min.js"></script>
 
+  <script src="config.js"></script>
   <script src="data-entry-form.js"></script>
   <script src="login-jquery-modal/login-jquery-modal.js"></script>
 </head>
@@ -35,7 +36,8 @@
   <div class="container">
     <!-- Create tabs menu -->
     <ul class="nav nav-tabs">
-      <li class="active" id="dbmsTabID"><a data-toggle="tab" href="#dbmsID">DBMS</a></li>
+      <li class="active" id="apTabID"><a data-toggle="tab" href="#apID">ActivityPub</a></li>
+      <li id="dbmsTabID"><a data-toggle="tab" href="#dbmsID">DBMS</a></li>
       <li id="fsTabID"><a data-toggle="tab" href="#fsID">File System</a></li>
       <li id="aboutTabID"><a data-toggle="tab" href="#aboutID">About</a></li>
       <!-- Start Dropdown -->
@@ -59,14 +61,14 @@
           </div>
           <!-- Inference Rule Name -->
           <div class="checkbox">
-            <label><input id="ruleNameID" type="checkbox" value="">Inference Rule</label> 
+            <label><input id="ruleNameID" type="checkbox" value="">Inference Rule</label>
             <input type="text" style="max-width: 250px" value="urn:ifp:inference:rule" id="infRuleNameID">
           </div>
 
           <div >
-            <label style="font-weight: normal" >SPARQL Endpoint</label> 
+            <label style="font-weight: normal" >SPARQL Endpoint</label>
             <!-- CMSB: TO DO: Default sparql endpoint. Move to a const in data-entry-form.js -->
-            <input type="text" style="width: 20em" value="https://linkeddata.uriburner.com/sparql" id="sparql_endpoint">
+            <input type="text" style="width: 20em" value="https://localhost:8443/sparql" id="sparql_endpoint">
           </div>
 
           <!-- Console Print Commands Checkbox  -->
@@ -108,8 +110,78 @@
 
     <!-- Add content to the tabs-->
     <div class="tab-content">
+      <!-- Start JSONLD Tab -->
+      <div id="apID" class="tab-pane fade in active">
+        <div class="container">
+          <div class="row">
+            <!-- Form Div (Left Side) -->
+            <div class="col-xs-6">
+              <h1 style="text-align:center">Data Entry</h1>
+              <form id="apFormID" class="form" method="post">
+                <div class="form-group">
+                  <label for="outboxID">Out Box</label>
+                  <span class="glyphicon glyphicon-question-sign" data-toggle="tooltip"
+                    data-original-title="Out box URI"></span>
+                  <input type="text" class="form-control" placeholder="http://domain/DAV/outbox/" id="outboxID">
+                  <p class="errorMessage" id="outboxErrorID"></p>
+                  <!--span>
+                   <button id="resolveBtnID" type="button"
+                      class="btn btn-warning">Fetch</button>
+                  </span-->
+                </div>
+                <div class="form-group">
+                    <label for="apObjType">ActivityStreams Object Document Template</label>
+                    <span class="glyphicon glyphicon-question-sign" data-toggle="tooltip"
+                                                                    data-original-title="ActivityStreams Object JSON-LD Document Template"></span>
+                  <div class="dropdown">
+                      <button type="button" class="btn btn-default dropdown-toggle" id="apObjType"
+                          data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">ActivityStreams Object Type&nbsp;<span class="caret"></span>
+                      </button>
+                      <ul class="dropdown-menu" id="apObj">
+                          <li><a href="#ap">Note</a></li>
+                          <li><a href="#ap">Delete</a></li>
+                          <li><a href="#ap">Like</a></li>
+                          <li><a href="#ap">UnLike</a></li>
+                          <li><a href="#ap">Announce</a></li>
+                          <li><a href="#ap">Follow</a></li>
+                          <li><a href="#ap">UnFollow</a></li>
+                      </ul>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="apObjectID">ActivityStreams Object</label>
+                  <span class="glyphicon glyphicon-question-sign" data-toggle="tooltip"
+                    data-original-title="JSON-LD document representing ActivityPub object"></span>
+                  <textarea class="form-control" placeholder="JSON-LD" rows="10"
+                    style="resize:vertical" id="apObjectID" >
+                  </textarea>
+                  <p class="errorMessage" id="apObjectErrorID"></p>
+                </div>
+                <!-- Start Buttons -->
+                <div class=button-wrapper>
+                  <span>
+                    <button id="sendBtnID" type="button"
+                      class="btn btn-success">Send</button>
+                  </span>
+                </div>
+                <!-- End Buttons -->
+              </form>
+            </div>
+              <!-- End of Form Div -->
+            <div class="col-xs-6">
+              <h1 style="text-align:center">Status</h1>
+              <table id="apTableID" class="table table-bordered"
+                style="table-layout: fixed; max-width:600px;">
+                  <div style="padding-top: 25px"><label for="sendResultID">Activity Id</label><span id="sendResultID">N/A</span></div>
+                  <div style="padding-top: 25px"><label for="apPostID">Object Id</label><span id="apPostID">N/A</span></div>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- End JOSNLD Tab -->
       <!-- Start DBMS Tab -->
-      <div id="dbmsID" class="tab-pane fade in active">
+      <div id="dbmsID" class="tab-pane fade">
         <div class="container">
           <div class="row">
             <!-- Form Div (Left Side) -->
@@ -228,7 +300,7 @@
                 <div class="form-group">
                   <label for="docNameID2">Document Name</label>
                   <input type="text" class="form-control"
-                    value="https://id.myopenlink.net/public_home/KingsleyUyiIdehen/RWW-QA/test1.ttl"
+                    value="https://localhost:8443/DAV/home/dba/Public/record-test.ttl"
                     id="docNameID2" >
                   <p class="errorMessage" id="docNameErrorID2"></p>
                 </div>
@@ -289,7 +361,7 @@
           <p style="padding-top: 10px"> Generic SPARQL Data Entry Form 1.0.4<br>
             Description: Simple Data Entry Form that helps unravel the power of RDF and SPARQL with regards
             to Structured Data creation and interaction. <br>
-            Creator: <a href="https://jordan.solid.openlinksw.com:8444/profile/card#me">Jordan Idehen</a>
+            Creator: <a href="https://jordan.solid.openlinksw.com:8443/profile/card#me">Jordan Idehen</a>
             (<a href="https://github.com/jidehen#this">Github</a>, <a
               href="https://www.linkedin.com/in/jordan-idehen-143934157/#this">LinkedIn</a>) <br>
             Supervisor: <a href="https://github.com/OpenLinkSoftware#this">OpenLink Software</a> <br>
@@ -338,12 +410,29 @@
   <span>or enter your WebID or the URL of your identity provider:</span><br/>
   <form>
     <fieldset>
-      <input type="text" id="login_custom_idp" value="" placeholder="https://my-identity.provider" 
+      <input type="text" id="login_custom_idp" value="https://localhost:8443" placeholder="https://my-identity.provider"
        class="text ui-widget-content ui-corner-all">
     </fieldset>
   </form>
   <span class="tip"></span>
-</div>
+  </div>
+
+  <div class="modal fade" tabindex="-1" role="dialog" id="configError">
+      <div class="modal-dialog" role="document">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 class="modal-title">Configuration Error</h4>
+              </div>
+              <div class="modal-body">
+                  <p>Configuration (config.js) missing, please use a copy of config.js.example with relevant default values</p>
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Dismiss</button>
+              </div>
+          </div>
+      </div>
+  </div>
 <!-- jQuery modal login dialog: End -->
 
 </body>
