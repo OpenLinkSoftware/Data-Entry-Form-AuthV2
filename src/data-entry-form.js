@@ -31,7 +31,7 @@ class AppState {
     this.initialObject = "";
     this.initialDocumentName = "";
     this.initialEndpoint = "";
-    this.lastState = { tab: "ap", documentName: "" };
+    this.lastState = { tab: "dbms", documentName: "" };
   }
 
   async updateLoginState() {
@@ -96,7 +96,7 @@ class AppState {
         this.lastState = lastState;
 
       if (!this.lastState.tab && (this.lastState.tab !== "dbms" || this.lastState.tab !== "fs" || this.lastState.tab !== "ap"))
-        this.lastState.tab = "ap";
+        this.lastState.tab = "dbms";
 
       if (this.lastState.endpoint)
         DOC.iSel("sparql_endpoint").value = this.lastState.endpoint;
