@@ -8,6 +8,15 @@ var offset;
 var tableSize;
 var resultMode;
 
+var demo_globals = { 
+        dav_link: "https://id.myopenlink.net/public_home/KingsleyUyiIdehen/RWW-QA/test1.ttl",
+        describe: "https://linkeddata.uriburner.com/describe/?url=",
+        sparql_endpoint: "https://linkeddata.uriburner.com/sparql",
+        host: "https://linkeddata.uriburner.com"
+};
+
+var _globals = typeof (globals) != 'undefined' ? globals : demo_globals;
+
 // --------------------------------------------------------------------------
 // class AppState: Start
 
@@ -125,9 +134,9 @@ class AppState {
             '  "summary":null,\n' +
             '  "content": ""\n' +
             '}';
-      document.getElementById('login_custom_idp').value = globals.host;
-      document.getElementById('docNameID2').value = globals.dav_link;
-      document.getElementById('sparql_endpoint').value = globals.sparql_endpoint;
+      document.getElementById('login_custom_idp').value = _globals.host;
+      document.getElementById('docNameID2').value = _globals.dav_link;
+      document.getElementById('sparql_endpoint').value = _globals.sparql_endpoint;
       if (this.getCurTab() === "fs") {
         $('a[href="#fsID"]').tab('show');
       if (this.lastState.documentName)
@@ -238,7 +247,7 @@ class AppState {
       DOC.iSel("docNameID2").value = solid_storage_value;
     } else {
       DOC.iSel("docNameID").value = "urn:records:test";
-      DOC.iSel("docNameID2").value = globals.dav_link;
+      DOC.iSel("docNameID2").value = _globals.dav_link;
     }
 
     // value from permalink
@@ -612,7 +621,7 @@ function nonvalidatedObject() {
 function makeLink(link) {
   var href = link;
   if (DOC.iSel("fctID").checked == true) { //if fct checkbox is checked
-      href = globals.describe + link;
+      href = _globals.describe + link;
   }
   link = '<a target="_blank" href="' + href + '">' + link + '</a>';
   return link;
@@ -625,8 +634,8 @@ function tableFormat(str) {
   var graph = gAppState.checkValue("docNameID", "docNameID2");
   var strLabel = str; // variable for what is show on screen in the href
 
-  if (str.includes(globals.describe)) {// of str is in fct format
-    strLabel = strLabel.replace(globals.describe, "");
+  if (str.includes(_globals.describe)) {// of str is in fct format
+    strLabel = strLabel.replace(_globals.describe, "");
     strLabel = strLabel.replace("%23", "#");
   }
 
@@ -1441,17 +1450,17 @@ async function queryGen() {
           var object = data.results.bindings[i].object.value;
           if (DOC.iSel("fctID").checked == true) { //if fct checkbox is checked
             if (subject.includes(graph) || regexp.test(subject)) { //if subject is not a literal value
-              subject = globals.describe + data.results.bindings[i].subject.value;
+              subject = _globals.describe + data.results.bindings[i].subject.value;
               subject = subject.replace("#", "%23"); // replaces # with %23 for fct results
             }
 
             if (predicate.includes(graph) || regexp.test(predicate)) { //if subject is not a literal value
-              predicate = globals.describe + data.results.bindings[i].predicate.value;
+              predicate = _globals.describe + data.results.bindings[i].predicate.value;
               predicate = predicate.replace("#", "%23");
             }
 
             if (object.includes(graph) || regexp.test(object)) {
-              object = globals.describe + data.results.bindings[i].object.value;
+              object = _globals.describe + data.results.bindings[i].object.value;
               object = object.replace("#", "%23");
             } else { //if object is literal value
               object = data.results.bindings[i].object.value;
@@ -1580,17 +1589,17 @@ async function updateTable() {
           var object = data.results.bindings[i].object.value;
           if (DOC.iSel("fctID").checked == true) { //if fct checkbox is checked
             if (subject.includes(graph) || regexp.test(subject)) { //if subject is not a literal value
-              subject = globals.describe + data.results.bindings[i].subject.value;
+              subject = _globals.describe + data.results.bindings[i].subject.value;
               subject = subject.replace("#", "%23"); // replaces # with %23 for fct results
             }
 
             if (predicate.includes(graph) || regexp.test(predicate)) { //if subject is not a literal value
-              predicate = globals.describe + data.results.bindings[i].predicate.value;
+              predicate = _globals.describe + data.results.bindings[i].predicate.value;
               predicate = predicate.replace("#", "%23");
             }
 
             if (object.includes(graph) || regexp.test(object)) {
-              object = globals.describe + data.results.bindings[i].object.value;
+              object = _globals.describe + data.results.bindings[i].object.value;
               object = object.replace("#", "%23");
             } else { //if object is literal value
               object = data.results.bindings[i].object.value;
@@ -2060,7 +2069,7 @@ $(document).ready(function () {
     }
   });
 
-  if (typeof (globals) == 'undefined')
+  if (typeof (_globals) == 'undefined')
     $('#configError').modal('show');
   // check for permalink
   gAppState.loadPermalink();
